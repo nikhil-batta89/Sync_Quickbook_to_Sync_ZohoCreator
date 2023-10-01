@@ -1,0 +1,180 @@
+void sync_Quickbook_to_sync_Zoho_creator()
+{
+    headers = Map();
+	headers.put("Content-Type","application/x-www-form-urlencoded");
+	body = Map();
+	body.put("grant_type","refresh_token");
+	body.put("refresh_token","1000.a93dabb8389e6fee031ca408e3f68b38.fd16e293cb240c3a3d1c741f37b3fb27");
+	body.put("client_id","1000.GKD36H3S7VGD3XMXLLTCUVHIXOQ87F");
+	body.put("client_secret","644c62fd2611900988fd5004ff458c7980cd21ad7e");
+	token_res = invokeurl
+	[
+		url :"https://accounts.zoho.com/oauth/v2/token"
+		type :POST
+		parameters:body
+		headers:headers
+	];
+	access_token = token_res.get("access_token");
+	New_header = Map();
+	New_header.put("Authorization","Zoho-oauthtoken " + access_token);
+	get_sheet_resp = invokeurl
+	[
+		url :"https://sheet.zoho.com/api/v2/dpr0z618aa9516afe411da5f49fb54714bc9b?method=worksheet.list"
+		type :GET
+		headers:New_header
+	];
+	// ============================== GET SHEET DETAILS ==================================
+	paramMap = Map();
+	paramMap.put('method','cell.content.get');
+	paramMap.put('worksheet_name','Sheet1');
+	paramMap.put('row',1);
+	paramMap.put('column',1);
+	Sheet_response = invokeurl
+	[
+		url :"https://sheet.zoho.com/api/v2/dpr0z618aa9516afe411da5f49fb54714bc9b"
+		type :GET
+		parameters:paramMap
+		headers:New_header
+	];
+	Refresh_token_value = Sheet_response.getJSON("content");
+	// info Refresh_token_value; 
+	// ==============================================================================
+	QBheaders = Map();
+	QBheaders.put("Content-Type","application/x-www-form-urlencoded");
+	QBparam = Map();
+	QBparam.put("grant_type","refresh_token");
+	QBparam.put("refresh_token",Refresh_token_value);
+	QBparam.put("redirect_uri","https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl");
+	QBparam.put("client_id","ABEl79EApZZ6hoqtCGh48YtYBF5sxMhZttNeCVOEj4kKCuOjuG");
+	QBparam.put("client_secret","Jh17JmASVJWezjIWU9v4qHczh0hyjwz8ZXSxEwYp");
+	authorization = invokeurl
+	[
+		url :"https://oauth.platform.intuit.com/oauth2/v2/tokens/bearer"
+		type :POST
+		parameters:QBparam
+		headers:QBheaders
+	];
+	new_refresh_token = authorization.get("refresh_token");
+	// info new_refresh_token;
+	// ========================================================================================
+	paramMap1 = Map();
+	paramMap1.put('method','replace');
+	paramMap1.put('search',Refresh_token_value);
+	paramMap1.put('replace_with',new_refresh_token);
+	paramMap1.put('worksheet_name','Sheet1');
+	paramMap1.put('row',1);
+	paramMap1.put('scope','row');
+	paramMap1.put('is_case_sensitive','false');
+	paramMap1.put('is_exact_match','true');
+	Update_rToken = invokeurl
+	[
+		url :"https://sheet.zoho.com/api/v2/dpr0z618aa9516afe411da5f49fb54714bc9b"
+		type :POST
+		parameters:paramMap1
+		headers:New_header
+	];
+// 	info Update_rToken;
+	QBheaders_1 = Map();
+	QBheaders_1.put("Content-Type","application/x-www-form-urlencoded");
+	QBparam_1 = Map();
+	QBparam_1.put("grant_type","refresh_token");
+	QBparam_1.put("refresh_token",new_refresh_token);
+	QBparam_1.put("redirect_uri","https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl");
+	QBparam_1.put("client_id","ABEl79EApZZ6hoqtCGh48YtYBF5sxMhZttNeCVOEj4kKCuOjuG");
+	QBparam_1.put("client_secret","Jh17JmASVJWezjIWU9v4qHczh0hyjwz8ZXSxEwYp");
+	new_authorization = invokeurl
+	[
+		url :"https://oauth.platform.intuit.com/oauth2/v2/tokens/bearer"
+		type :POST
+		parameters:QBparam_1
+		headers:QBheaders
+	];
+	access_token = new_authorization.getJSON("access_token");
+	info access_token ;
+	header_data = Map();
+	header_data.put("Content-Type","application/x-www-form-urlencoded");
+	body = Map();
+	body.put("grant_type","refresh_token");
+	body.put("refresh_token",new_refresh_token);
+	body.put("client_id","ABEl79EApZZ6hoqtCGh48YtYBF5sxMhZttNeCVOEj4kKCuOjuG");
+	body.put("client_secret","Jh17JmASVJWezjIWU9v4qHczh0hyjwz8ZXSxEwYp");
+	token_res_1 = invokeurl
+	[
+		url :"https://oauth.platform.intuit.com/oauth2/v2/tokens/bearer"
+		type :POST
+		parameters:body
+		headers:header_data
+	];
+			info token_res_1;
+		access_token_1 = token_res_1.get("access_token");
+			 	info access_token_1;
+		paramete = {"start_date":2022 - 01 - 01,"end_date":2022 - 12 - 31,"columns":"tx_date%252Cname%252Csubt_nat_amount","accounting_method":"Accrual"};
+		header_data_1 = Map();
+		header_data_1.put("Authorization","Bearer " + access_token_1);
+		header_data_1.put("Content-Type","application/json");
+		header_data_1.put("Accept","application/json");
+		CompanyName = invokeurl
+		[
+			url :"https://quickbooks.api.intuit.com/v3/company/9130356968504886/companyinfo/9130356968504886"
+			type :GET
+			headers:header_data_1
+		];
+		info CompanyName;
+		Company = CompanyName.getJson("CompanyInfo").get("CompanyName");
+			info Company;
+		quickbook = invokeurl
+		[
+			url :"https://quickbooks.api.intuit.com/v3/company/9130356968504886/reports/ProfitAndLossDetail?start_date=2022-01-01&end_date=2022-12-31&columns=tx_date%252Cname%252Csubt_nat_amount&accounting_method=Accrual"
+			type :GET
+			parameters:paramete
+			headers:header_data_1
+		];
+		info quickbook;
+		Equalization_Revenue1 = quickbook.getJson("Rows").getJson("Row").getJson("Rows").getJson("Row").getJson("Rows").getJson("Row").getJson("Rows").getJson("Row").getJson("Summary").getJson("ColData");
+		val = Equalization_Revenue1.get(2).get("value");
+		Norte_Realty_LLC1 = quickbook.getJson("Rows").getJson("Row").getJson("Rows").get("Row");
+		var = Norte_Realty_LLC1.get(0);
+		LLC_Value = var.getJson("Rows").getJson("Row").getJson("Rows").get("Row").get(1).get("Summary").get("ColData").get(2).get("value");
+		Ativore_Private = quickbook.getJson("Rows").getJson("Row").getJson("Rows").get("Row");
+		var_0 = Ativore_Private.get(0);
+		Ativore_Value = var_0.getJson("Rows").getJson("Row").get(1).get("Summary").get("ColData").get(2).get("value");
+		Commissions_fees1 = quickbook.getJson("Rows").getJson("Row").getJson("Rows").get("Row");
+		var_1 = Commissions_fees1.get(1);
+		Commissions = var_1.getJson("Rows").get("Row").get(0).get("Summary").get("ColData").get(2).get("value");
+		Equalization_Aquisition_Fee = quickbook.getJson("Rows").getJson("Row").getJson("Rows").get("Row");
+		var_2 = Equalization_Aquisition_Fee.get(1);
+		Equalization = var_2.getJson("Rows").get("Row").get(1).get("Rows").get("Row").getJson("Rows").getJson("Row").getJson("Summary").get("ColData").get(2).get("value");
+		Bank_fees1 = quickbook.getJson("Rows").getJson("Row").getJson("Rows").get("Row");
+		var_3 = Bank_fees1.get(1);
+		Bank_fees = var_3.getJson("Rows").get("Row").get(1).getJson("Rows").getJson("Row").get(1).getJson("Summary").get("ColData").get(2).get("value");
+		data_param = Map();
+		data = Map();
+		data.put("refresh_token","1000.df24237e29c0154d0363d7ec85f12fd0.31c8b5425dee7a281597c0fd9bea7505");
+		data.put("client_id","1000.GKD36H3S7VGD3XMXLLTCUVHIXOQ87F");
+		data.put("client_secret","644c62fd2611900988fd5004ff458c7980cd21ad7e");
+		data.put("grant_type","refresh_token");
+		token = postUrl("https://accounts.zoho.com/oauth/v2/token?",data);
+		var = token.get("access_token");
+		// 	info var;
+		head_data = Map();
+		head_data.put("Authorization","Zoho-oauthtoken " + var);
+		data1 = Map();
+// 		data1.put("Company_Name",Company);
+		data1.put("Equalization_Revenue1",val);
+		data1.put("Norte_Realty_LLC1",LLC_Value);
+		data1.put("Commissions_fees1",Commissions);
+		data1.put("Equalization_Aquisition_Fee",Equalization);
+		data1.put("Bank_fees_service_charges",Bank_fees);
+		data1.put("Ativore_Private_Equity_Real_Estate_EUA_Fund1",Ativore_Value);
+		// 	info data1;
+		data = Map();
+		data.put("data",data1);
+		Records_map = invokeurl
+		[
+			url :"https://creator.zoho.com/api/v2/ativoretec/NehaProjects/form/Income"
+			type :POST
+			parameters:data.toString()
+			headers:head_data
+		];
+		info Records_map;
+}
